@@ -9,22 +9,53 @@
 
 #include "interface.h"
 
-typedef struct contato {
-    char *nome;
-    char *telefone;
-    int idade;
-} contato_t;
 
-typedef struct agenda {
-    contato_t *contato;
-    int tamanho;
-} agenda_t;
-
-int adicionar_contato(agenda_t* agenda) {
-    solicitar_contato();
+int salvar_contato(agenda_t* agenda, contato_t* contatos) {
+    agenda->contato[agenda->tamanho] = *contatos;
+    agenda->tamanho++;
     return 0;
 }
 
+int adicionar_contato(agenda_t* agenda) {
+
+    char **contato_informado = solicitar_contato();
+    contato_t* novo_contato = malloc(sizeof(contato_t));
+    novo_contato->nome = contato_informado[0];
+    novo_contato->telefone = contato_informado[1];
+    novo_contato->idade = atoi(contato_informado[2]);
+
+    salvar_contato(agenda, novo_contato);
+
+    return 0;
+}
+
+int salvar_agenda(agenda_t* agenda) {
+    FILE* arquivo = fopen("agenda.txt", "w");
+
+    if ( arquivo == NULL ) {
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < agenda->tamanho; i++) {
+        fprintf(arquivo, "%s,%s,%d\n", agenda->contato[i].nome, agenda->contato[i].telefone, agenda->contato[i].idade);
+    }
+
+    fclose(arquivo);
+    return 0;
+}
+int finalizar_agenda(agenda_t* agenda) {
+
+    salvar_agenda(agenda);
+    for (int i = 0; i < agenda->tamanho; i++) {
+        free(agenda->contato[i].nome);
+        free(agenda->contato[i].telefone);
+    }
+    free(agenda->contato);
+    free(agenda);
+
+    return 0;
+
+}
 
 int init_agenda() {
 
@@ -41,13 +72,13 @@ int init_agenda() {
             case 1: adicionar_contato(agenda);
                 break;
 
-                case 2:printf("Listando contato... ");
+            case 2:listar_contatos(agenda);
                 break;
 
-                case 3:printf("Buscar contato... ");
+            case 3:printf("Buscar contato... ");
                 break;
 
-                case 0:printf("Saindo... ");
+            case 0: finalizar_agenda(agenda);
                 // TODO IMPLEMENTAR LIBERAÇÃO DE MEMORIA BABY!!!
                 break;
 
